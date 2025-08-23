@@ -1,0 +1,14 @@
+# Visual Studio cache
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+
+# Other
+*.dbmdl
+*.log
+*.ldf
+*.mdf
