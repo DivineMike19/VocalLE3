@@ -1,54 +1,67 @@
-﻿using BlogDataLibrary.Database;
-using BlogDataLibrary.Models;
+﻿using BlogDataLibrary.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BlogDataLibrary.Data
 {
-    public class SqlData
+    public class SqlData : ISqlData
     {
         private readonly ISqlDataAccess _db;
+        private const string connectionStringName = "SqlDb";
 
         public SqlData(ISqlDataAccess db)
         {
             _db = db;
         }
 
-        // Get all posts with author names
-        public Task<List<ListPostModel>> GetPosts()
+        //  Authenticate user
+        public async Task<UserModel?> Authenticate(string username, string password)
         {
-            string sql = @"SELECT p.Id, p.Title, u.FirstName + ' ' + u.LastName AS Author
-                           FROM dbo.Posts p
-                           INNER JOIN dbo.Users u ON p.UserId = u.Id;";
-            return _db.LoadData<ListPostModel, dynamic>(sql, new { });
+            var results = await _db.LoadData<UserModel, dynamic>(
+                "dbo.spUsers_Authenticate",
+                new { Username = username, Password = password },
+                connectionStringName);
+
+            return results.FirstOrDefault();
         }
 
-        // Get a single post by Id
-        public Task<List<PostModel>> GetPostById(int id)
+        //  Register user
+        public async Task Register(string username, string password, string firstName, string lastName)
         {
-            string sql = @"SELECT * FROM dbo.Posts WHERE Id = @Id;";
-            return _db.LoadData<PostModel, dynamic>(sql, new { Id = id });
+            await _db.SaveData(
+                "dbo.spUsers_Register",
+                new { Username = username, Password = password, FirstName = firstName, LastName = lastName },
+                connectionStringName);
         }
 
-        // Add a new post
-        public Task SavePost(PostModel post)
+        //  Add post
+        public async Task AddPost(int userId, string title, string body)
         {
-            string sql = @"INSERT INTO dbo.Posts (Title, Content, UserId)
-                           VALUES (@Title, @Content, @UserId);";
-            return _db.SaveData(sql, post);
+            await _db.SaveData(
+                "dbo.spPosts_Insert",
+                new { UserId = userId, Title = title, Content = body },
+                connectionStringName);
         }
 
-        // Add a new user
-        public Task SaveUser(UserModel user)
+        //  List posts
+        public async Task<IEnumerable<ListPostModel>> ListPosts()
         {
-            string sql = @"INSERT INTO dbo.Users (Username, Password, FirstName, LastName)
-                           VALUES (@Username, @Password, @FirstName, @LastName);";
-            return _db.SaveData(sql, user);
+            return await _db.LoadData<ListPostModel, dynamic>(
+                "dbo.spPosts_List",
+                new { },
+                connectionStringName);
         }
 
-        // Get all users
-        public Task<List<UserModel>> GetUsers()
+        //  Show post details
+        public async Task<PostModel?> ShowPostDetails(int postId)
         {
-            string sql = "SELECT * FROM dbo.Users;";
-            return _db.LoadData<UserModel, dynamic>(sql, new { });
+            var results = await _db.LoadData<PostModel, dynamic>(
+                "dbo.spPosts_Detail",
+                new { PostId = postId },
+                connectionStringName);
+
+            return results.FirstOrDefault();
         }
     }
 }

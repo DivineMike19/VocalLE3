@@ -1,14 +1,27 @@
-# Visual Studio cache
-.vs/
-*.user
-*.suo
-
-# Build output
+# Ignore build outputs
 bin/
 obj/
+Debug/
+Release/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio settings
+.vs/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Logs
+*.log
 
 # Other
 *.dbmdl
-*.log
-*.ldf
-*.mdf
+*.jfm
+*.pdb
